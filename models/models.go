@@ -10,7 +10,7 @@ type Models struct {
 
 func (models *Models) RunCmd(cmd string) {
 	switch cmd {
-	case "dailybackupdb":
+	case "backup":
 		dbName := flag.Lookup("dbname").Value.(flag.Getter).Get().(string)
 		host := flag.Lookup("host").Value.(flag.Getter).Get().(string)
 		port := flag.Lookup("port").Value.(flag.Getter).Get().(string)
@@ -24,7 +24,7 @@ func (models *Models) RunCmd(cmd string) {
 			go models.dailyBackupDatabase(host, port, username, password, dbName)
 			select {}
 		}
-	case "restoredb":
+	case "restore":
 		host := flag.Lookup("host").Value.(flag.Getter).Get().(string)
 		port := flag.Lookup("port").Value.(flag.Getter).Get().(string)
 		username := flag.Lookup("username").Value.(flag.Getter).Get().(string)
