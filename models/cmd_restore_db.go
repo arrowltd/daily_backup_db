@@ -8,7 +8,6 @@ import (
 	"os/exec"
 
 	"github.com/arrowltd/daily_backup_db/adapter"
-	"github.com/arrowltd/daily_backup_db/date"
 	"github.com/fatih/color"
 )
 
@@ -17,10 +16,8 @@ func (models *Models) NewModel() {
 }
 func (model *Models) restoreDatabase(host, port, username, password, dbName, dateStr string) {
 	log.Println("Start the restore process")
-	dateStringFormat := date.TimeToDateStringFileFormat(date.DateStringToTime(dateStr, "YYY/MM/DD"))
-	dumpFile := fmt.Sprintf("auto_%v_%v.dump", dbName, dateStringFormat)
+	dumpFile := fmt.Sprintf("auto_%v_%v.dump", dbName, dateStr)
 	filePath := fmt.Sprintf("/tmp/%v", dumpFile)
-	fmt.Println(filePath)
 	if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
 		color.Red("Not found any %s backup file in %s", dbName, dateStr)
 	} else {

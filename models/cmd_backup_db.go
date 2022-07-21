@@ -42,12 +42,9 @@ func (models *Models) backupDatabase(adapter *adapter.Adapter) {
 	}
 	//delete all database dump file
 	afterDate := date.Now().AddDate(0, 0, -3)
-	if err != nil {
-		panic(err)
-	}
 	for _, f := range oldDumpFiles {
 		dateFileString := strings.Split(strings.ReplaceAll(f, ".dump", ""), "_")[2]
-		dateFileTime := date.DateStringToTime(dateFileString, "YYYYMMDD")
+		dateFileTime := date.DateStringToTime(dateFileString)
 
 		if dateFileTime.Before(afterDate) {
 			if err := os.Remove(f); err != nil {

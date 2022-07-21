@@ -23,16 +23,9 @@ func TimeToDateStringFileFormat(timeObject time.Time) string {
 func Now() time.Time {
 	return time.Now().In(serverLoc)
 }
-func DateStringToTime(dateStr, format string) time.Time {
+func DateStringToTime(dateStr string) time.Time {
 	dateTimeStr := fmt.Sprintf("%s 00:00:00 +0700", dateStr)
-	timeObjc := Now()
-	switch format {
-	case "YYYYMMDD":
-		timeObjc, _ = time.Parse("20060102 15:04:05 -0700", dateTimeStr)
-	default:
-		timeObjc, _ = time.Parse("02/01/2006 15:04:05 -0700", dateTimeStr)
-	}
-
+	timeObjc, _ := time.Parse("20060102 15:04:05 -0700", dateTimeStr)
 	return timeObjc
 }
 func ChangeTo(src time.Time, h, m, s int) time.Time {
