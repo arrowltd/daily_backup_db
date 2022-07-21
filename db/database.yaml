@@ -1,0 +1,9 @@
+development:
+  type: "postgres"
+  database: ""
+  username: "thaitien"
+  password: "123456"
+  maxIdleConnection: 80
+  maxOpenConnection: 40
+  host: "127.0.0.1"
+  port: "5432"
