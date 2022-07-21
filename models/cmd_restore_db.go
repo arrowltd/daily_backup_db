@@ -17,7 +17,7 @@ func (models *Models) NewModel() {
 }
 func (model *Models) restoreDatabase(host, port, username, password, dbName, dateStr string) {
 	log.Println("Start the restore process")
-	dateStringFormat := date.TimeToDateStringFileFormat(date.DateStringToTime(dateStr))
+	dateStringFormat := date.TimeToDateStringFileFormat(date.DateStringToTime(dateStr, "YYY/MM/DD"))
 	dumpFile := fmt.Sprintf("auto_%v_%v.dump", dbName, dateStringFormat)
 	filePath := fmt.Sprintf("/tmp/%v", dumpFile)
 	fmt.Println(filePath)

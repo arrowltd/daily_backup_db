@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/arrowltd/daily_backup_db/adapter"
@@ -42,18 +41,15 @@ func (models *Models) backupDatabase(adapter *adapter.Adapter) {
 		panic(err)
 	}
 	//delete all database dump file
-	afterDateString := date.TimeToDateStringFileFormat(date.Now().AddDate(0, 0, -3))
-	afterDateInt, err := strconv.Atoi(afterDateString)
+	afterDate := date.Now().AddDate(0, 0, -3)
 	if err != nil {
 		panic(err)
 	}
 	for _, f := range oldDumpFiles {
 		dateFileString := strings.Split(strings.ReplaceAll(f, ".dump", ""), "_")[2]
-		dateFileInt, err := strconv.Atoi(dateFileString)
-		if err != nil {
-			panic(err)
-		}
-		if dateFileInt <= afterDateInt {
+		dateFileTime := date.DateStringToTime(dateFileString, "YYYYMMDD")
+
+		if dateFileTime.Before(afterDate) {
 			if err := os.Remove(f); err != nil {
 				panic(err)
 			}
