@@ -9,7 +9,7 @@ import (
 )
 
 var cmd = flag.String("cmd", "", "command line")
-var name = flag.String("name", "", "Database name")
+var dbName = flag.String("dbname", "", "Database name")
 var date = flag.String("date", "", "Date")
 var host = flag.String("host", "127.0.0.1", "host")
 var port = flag.String("port", "5432", "port")

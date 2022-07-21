@@ -6,13 +6,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
-
-	"github.com/fatih/color"
+	"strconv"
+	"strings"
 
 	"github.com/arrowltd/daily_backup_db/adapter"
 	"github.com/arrowltd/daily_backup_db/date"
 	"github.com/arrowltd/daily_backup_db/utils"
+	"github.com/fatih/color"
 )
 
 func (models *Models) dailyBackupDatabase(host, port, username, password, dbName string) {
@@ -36,20 +36,31 @@ func (models *Models) dailyBackupDatabase(host, port, username, password, dbName
 }
 
 func (models *Models) backupDatabase(adapter *adapter.Adapter) {
-
 	log.Println("Database backup daily is starting......")
 	oldDumpFiles, err := filepath.Glob(fmt.Sprintf("/tmp/auto_%v_*", adapter.Database))
 	if err != nil {
 		panic(err)
 	}
 	//delete all database dump file
+	afterDateString := date.TimeToDateStringFileFormat(date.Now().AddDate(0, 0, -3))
+	afterDateInt, err := strconv.Atoi(afterDateString)
+	if err != nil {
+		panic(err)
+	}
 	for _, f := range oldDumpFiles {
-		if err := os.Remove(f); err != nil {
+		dateFileString := strings.Split(strings.ReplaceAll(f, ".dump", ""), "_")[2]
+		dateFileInt, err := strconv.Atoi(dateFileString)
+		if err != nil {
 			panic(err)
 		}
-	}
+		if dateFileInt <= afterDateInt {
+			if err := os.Remove(f); err != nil {
+				panic(err)
+			}
+		}
 
-	dateString := date.TimeToDateStringFileFormat(time.Now())
+	}
+	dateString := date.TimeToDateStringFileFormat(date.Now())
 	dumpFile := fmt.Sprintf("/tmp/auto_%v_%v.dump", adapter.Database, dateString)
 	dbLink := fmt.Sprintf("%v://%v:%v@%v:%v/%v",
 		adapter.Type, adapter.Username, adapter.Password,
