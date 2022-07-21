@@ -2,7 +2,6 @@ package adapter
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/fatih/color"
@@ -13,20 +12,22 @@ type Connection struct {
 	*Adapter
 }
 
-func (conn *Connection) CreateDatabaseIfNotExists() error {
-	if conn.doesDatabaseExist() {
-		color.Red("Database '%s' already exists. \n", conn.Database)
-		return errors.New("err:database_already_exist")
-	}
-
+func (conn *Connection) CreateDatabase() error {
 	if _, err := conn.DB.Exec(fmt.Sprintf("CREATE DATABASE %s;", conn.Database)); err != nil {
 		panic(err)
 	}
-
 	color.Green("Created '%s' database. \n", conn.Database)
 	return nil
 }
-func (conn *Connection) doesDatabaseExist() bool {
+func (conn *Connection) DropDatabase() error {
+	if _, err := conn.DB.Exec(fmt.Sprintf("DROP DATABASE %s;", conn.Database)); err != nil {
+		panic(err)
+	}
+
+	color.Yellow("Database '%s' dropped. \n", conn.Database)
+	return nil
+}
+func (conn *Connection) DoesDatabaseExist() bool {
 	row := conn.DB.QueryRow(`
 		SELECT EXISTS(	SELECT datname FROM pg_catalog.pg_database WHERE datname = $1);`, conn.Database)
 	var exists bool

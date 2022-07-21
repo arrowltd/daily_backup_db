@@ -10,17 +10,22 @@ import (
 
 	"github.com/fatih/color"
 
+	"github.com/arrowltd/daily_backup_db/adapter"
 	"github.com/arrowltd/daily_backup_db/date"
-	"github.com/arrowltd/daily_backup_db/env"
-	"github.com/arrowltd/daily_backup_db/psql/adapter"
 	"github.com/arrowltd/daily_backup_db/utils"
-	"github.com/mplulu/renv"
 )
 
-func (models *Models) dailyBackupDatabase(dbName string) {
-	var env *env.ENV
-	renv.Parse("", &env)
-	adapter := adapter.Initialize(env.DatabaseConfigFilePath, env.Environment)
+func (models *Models) dailyBackupDatabase(host, port, username, password, dbName string) {
+	adapter := &adapter.Adapter{
+		Type:              "postgres",
+		Database:          dbName,
+		Username:          username,
+		Password:          password,
+		Host:              host,
+		Port:              port,
+		MaxIdleConnection: 80,
+		MaxOpenConnection: 40,
+	}
 	adapter.Database = dbName
 	adapter.ConnectToDatabase()
 

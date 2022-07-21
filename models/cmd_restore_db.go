@@ -1,65 +1,65 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 
+	"github.com/arrowltd/daily_backup_db/adapter"
 	"github.com/arrowltd/daily_backup_db/date"
-	"github.com/arrowltd/daily_backup_db/env"
-	"github.com/arrowltd/daily_backup_db/psql"
-	"github.com/arrowltd/daily_backup_db/psql/adapter"
 	"github.com/fatih/color"
-	"github.com/mplulu/renv"
 )
 
 func (models *Models) NewModel() {
 
 }
-func (model *Models) restoreDatabase(dateStr string) {
+func (model *Models) restoreDatabase(host, port, username, password, dbName, dateStr string) {
 	log.Println("Start the restore process")
 	dateStringFormat := date.TimeToDateStringFileFormat(date.DateStringToTime(dateStr))
-
-	filePath := fmt.Sprintf("/tmp/auto_*_%v.dump", dateStringFormat)
-	dumpFiles, err := filepath.Glob(filePath)
-
-	if err != nil {
-		panic(err)
-	}
-	if len(dumpFiles) < 1 {
-		color.Red("The backup file doesnot exist in %s", dateStr)
+	dumpFile := fmt.Sprintf("auto_%v_%v.dump", dbName, dateStringFormat)
+	filePath := fmt.Sprintf("/tmp/%v", dumpFile)
+	fmt.Println(filePath)
+	if _, err := os.Stat(filePath); errors.Is(err, os.ErrNotExist) {
+		color.Red("Not found any %s backup file in %s", dbName, dateStr)
 	} else {
-		var env *env.ENV
-		renv.Parse("", &env)
-
-		adapter := adapter.Initialize(env.DatabaseConfigFilePath, env.Environment)
-		for _, f := range dumpFiles {
-
-			fileNames := strings.Split(strings.ReplaceAll(f, ".dump", ""), "_")
-			dbName := fileNames[1] + fileNames[2]
-			//assign database name
-			adapter.Database = dbName
-			//create database if it doesn't exist
-			psql.CreateDb(adapter)
-
-			dbLink := fmt.Sprintf("%v://%v:%v@%v:%v/%v",
-				adapter.Type, adapter.Username, adapter.Password,
-				adapter.Host, adapter.Port,
-				dbName)
-			cmdArgs := []string{
-				"-d",
-				dbLink,
-				f,
-			}
-			cmd := exec.Command("pg_restore", cmdArgs...)
-			_, err := cmd.CombinedOutput()
-			if err != nil {
-				panic(err)
-			}
-			color.Green("Restore successfully to database: %s", adapter.Database)
+		adapter := &adapter.Adapter{
+			Type:              "postgres",
+			Database:          dbName,
+			Host:              host,
+			Port:              port,
+			Username:          username,
+			Password:          password,
+			MaxIdleConnection: 80,
+			MaxOpenConnection: 40,
 		}
+		conn := adapter.ConnectToPostgres()
+		//create database if it doesn't exist
+		if conn.DoesDatabaseExist() {
+			conn.DropDatabase()
+		}
+		err := conn.CreateDatabase()
+		if err != nil {
+			panic(err)
+		}
+		defer conn.Close()
+		dbLink := fmt.Sprintf("%v://%v:%v@%v:%v/%v",
+			adapter.Type, adapter.Username, adapter.Password,
+			adapter.Host, adapter.Port,
+			adapter.Database)
+		cmdArgs := []string{
+			"-d",
+			dbLink,
+			filePath,
+		}
+		cmd := exec.Command("pg_restore", cmdArgs...)
+		output, err := cmd.CombinedOutput()
+		fmt.Println(string(output))
+		if err != nil {
+			panic(err)
+		}
+		color.Green("Restore successfully to database: %s", adapter.Database)
 	}
 	log.Println("End the restore process")
 }
